@@ -18,7 +18,7 @@ def parse_cuts(filename):
             end = float(end[1:].strip())
             cuts.append([start, end])
     return cuts
-                
+
 def process_with_moviepy(filenames, datafiles, outfile):
     clips = []
 
@@ -46,7 +46,9 @@ if __name__ == "__main__":
     for fname in files:
         if fname.lower().endswith("mp4"):
             videofiles.append(os.path.join(input_dir, fname))
-            datafiles.append(os.path.join(input_dir, f"{fname.split('.')[0]}.txt"))
+            for txtname in files:
+                if (fname.split('.')[0] + ".txt") == txtname:
+                    datafiles.append(os.path.join(input_dir, txtname))
 
 
     process_with_moviepy(videofiles, datafiles, args.output)

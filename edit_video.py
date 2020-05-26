@@ -49,9 +49,9 @@ def edit_video(file):
     # print(timestamps)
 
 def write_file(timestamps, file):
-    with open(file + "_timestamps.txt", "w") as f:
+    with open(file.split(".")[0] + ".txt", "w") as f:
         for i in timestamps:
-            f.write(">clip start " + str(i["start"]) + "\n" + "<clip end " + str(i["end"]) + "\n")
+            f.write(">" + str(i["start"]) + "\n" + "<" + str(i["end"]) + "\n")
 
 
 if __name__ == "__main__":
