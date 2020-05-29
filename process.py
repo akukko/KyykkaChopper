@@ -46,9 +46,7 @@ if __name__ == "__main__":
     for fname in files:
         if fname.lower().endswith("mp4"):
             videofiles.append(os.path.join(input_dir, fname))
-            for txtname in files:
-                if (fname.split('.')[0] + ".txt") == txtname:
-                    datafiles.append(os.path.join(input_dir, txtname))
+            datafiles.append(os.path.join(input_dir, f"{fname.split('.')[0]}.txt"))
 
 
     process_with_moviepy(videofiles, datafiles, args.output)
