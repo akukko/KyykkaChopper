@@ -18,7 +18,7 @@ def parse_cuts(filename):
             end = float(end[1:].strip())
             cuts.append([start, end])
     return cuts
-
+                
 def process_with_moviepy(filenames, datafiles, outfile):
     clips = []
 
