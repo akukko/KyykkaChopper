@@ -9,6 +9,8 @@ Automatic video editor for quickly editing Kyykkä videos.
 
 The input folder should contain one or more mp4 videos, and cut files corresponding to the video filename. The cut file contains the timestamps of the desired cuts that chopper should make.
 
+If ran inside the input directory, the process.py doesn't require any arguments. --output will default to "out.mp4", --titles will default to "titles.txt" and the directory in which the process.py is ran is used as input directory.
+
 An example folder could contain files:
 * vid1.mp4
 * vid2.mp4

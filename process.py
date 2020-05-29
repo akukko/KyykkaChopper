@@ -105,6 +105,9 @@ if __name__ == "__main__":
     args = args.parse_args()
 
     input_dir = args.input
+    if not args.input:
+        input_dir = os.getcwd()
+
     files = os.listdir(input_dir)
 
     videofiles = []
