@@ -109,6 +109,7 @@ if __name__ == "__main__":
         input_dir = os.getcwd()
 
     files = os.listdir(input_dir)
+    file_set = set(files)
 
     videofiles = []
     datafiles = []
@@ -116,8 +117,10 @@ if __name__ == "__main__":
 
     for fname in files:
         if fname.lower().endswith("mp4"):
-            videofiles.append(os.path.join(input_dir, fname))
-            datafiles.append(os.path.join(input_dir, f"{fname.split('.')[0]}.txt"))
+            cut_file = f"{fname.split('.')[0]}.txt"
+            if cut_file in file_set:
+                videofiles.append(os.path.join(input_dir, fname))
+                datafiles.append(os.path.join(input_dir, cut_file))
         elif fname.lower() == args.titles:
             titles = get_scores(os.path.join(input_dir, args.titles))
 
