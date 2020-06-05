@@ -1,10 +1,14 @@
+from config import *
+from terminal_colors import *
+from helpers import get_lines
+
 import argparse
 import os
 from moviepy.editor import VideoFileClip, concatenate_videoclips, TextClip, CompositeVideoClip
 
 text_i = 0
 
-def parse_cuts(vid, filename, texts):
+def parse_cuts(vid, filename, texts, conf):
     global text_i
     """Parse file with the following format:
     >clip start (in seconds)
@@ -28,7 +32,7 @@ def parse_cuts(vid, filename, texts):
                 start = float(line[1:].strip())
                 if title_start:
                     # title at the very beginning
-                    clip, text_i = build_title(vid, title_start, start, texts, text_i)
+                    clip, text_i = build_title(vid, title_start, start, texts, text_i, conf)
 
                     cuts.append(clip)
                     title_start = None
@@ -56,20 +60,20 @@ def parse_cuts(vid, filename, texts):
 
                 title = float(line[1:].strip())
                 
-                clip, text_i = build_title(vid, title_start, title, texts, text_i)
+                clip, text_i = build_title(vid, title_start, title, texts, text_i, conf)
                 cuts.append(clip)
 
                 title_start = None
     return cuts
             
 
-def build_title(vid, title_start, title_end, texts, text_i):
+def build_title(vid, title_start, title_end, texts, text_i, conf):
     t = texts[text_i]
     t = t.replace('\\n', '\n')
     
     clip = vid.subclip(title_start, title_end)
 
-    text = TextClip(f"{t}", fontsize=110, font="roboto-mono", color="white").set_pos(("center", "bottom"))
+    text = TextClip(f"{t}", fontsize=conf.titlesize, font=conf.titlefont, color=conf.titlecolor).set_pos(("center", "bottom"))
     
     comp_clip = CompositeVideoClip([clip, text])
     comp_clip.duration = clip.duration
@@ -77,11 +81,11 @@ def build_title(vid, title_start, title_end, texts, text_i):
     return comp_clip, text_i + 1
 
 
-def process_with_moviepy(filenames, datafiles, outfile, scores):
+def process_with_moviepy(filenames, datafiles, outfile, titles, conf):
     clips = []
     for video_file, data_file in zip(filenames, datafiles):
         input_vid = VideoFileClip(video_file)
-        cuts = parse_cuts(input_vid, data_file, scores)
+        cuts = parse_cuts(input_vid, data_file, titles, conf)
 
         for cut in cuts:
             clips.append(cut)
@@ -90,19 +94,17 @@ def process_with_moviepy(filenames, datafiles, outfile, scores):
 
     final_clip.write_videofile(outfile)
 
-def get_lines(titlefile):
-    with open(titlefile, "r", encoding='utf-8') as f:
-        lines = f.readlines() 
-    print(lines)
-    return lines
-
 if __name__ == "__main__":
     args = argparse.ArgumentParser()
     args.add_argument("--input", type=str)
     args.add_argument("--output", type=str, default="out.mp4")
     args.add_argument("--titles", type=str, default="titles.txt")
+    args.add_argument("--config", type=str, default="chop.conf")
 
     args = args.parse_args()
+
+    conf = read_config(args.config)
+
 
     input_dir = args.input
     if not args.input:
@@ -124,4 +126,4 @@ if __name__ == "__main__":
         elif fname.lower() == args.titles:
             titles = get_lines(os.path.join(input_dir, args.titles))
 
-    process_with_moviepy(videofiles, datafiles, args.output, titles)
+    process_with_moviepy(videofiles, datafiles, args.output, titles, conf)
