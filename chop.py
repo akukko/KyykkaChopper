@@ -69,7 +69,7 @@ def build_title(vid, title_start, title_end, texts, text_i):
     
     clip = vid.subclip(title_start, title_end)
 
-    text = TextClip(f"{t}", fontsize=145, font="Roboto Mono", color="white").set_pos(("center", "bottom"))
+    text = TextClip(f"{t}", fontsize=110, font="roboto-mono", color="white").set_pos(("center", "bottom"))
     
     comp_clip = CompositeVideoClip([clip, text])
     comp_clip.duration = clip.duration
@@ -90,9 +90,9 @@ def process_with_moviepy(filenames, datafiles, outfile, scores):
 
     final_clip.write_videofile(outfile)
 
-def get_scores(scorefile):
-    with open(scorefile, "r", encoding='utf-8') as f:
-        lines = [l for l in (line.strip() for line in f) if l] 
+def get_lines(titlefile):
+    with open(titlefile, "r", encoding='utf-8') as f:
+        lines = f.readlines() 
     print(lines)
     return lines
 
@@ -122,6 +122,6 @@ if __name__ == "__main__":
                 videofiles.append(os.path.join(input_dir, fname))
                 datafiles.append(os.path.join(input_dir, cut_file))
         elif fname.lower() == args.titles:
-            titles = get_scores(os.path.join(input_dir, args.titles))
+            titles = get_lines(os.path.join(input_dir, args.titles))
 
     process_with_moviepy(videofiles, datafiles, args.output, titles)
