@@ -96,13 +96,20 @@ def process_with_moviepy(filenames, datafiles, outfile, titles, conf):
 
 if __name__ == "__main__":
     args = argparse.ArgumentParser()
-    args.add_argument("--input", type=str)
-    args.add_argument("--output", type=str, default="out.mp4")
-    args.add_argument("--titles", type=str, default="titles.txt")
-    args.add_argument("--config", type=str, default="chop.conf")
-
+    args.add_argument("-i", "--input", type=str, metavar="INPUT_DIR", help="Input directory that contains the cut-to-be files", required=False)
+    args.add_argument("-r", "--recursive", action="store_true", help="Whether to look for input files recursively", required=False)
+    args.add_argument("-o", "--output", type=str, metavar="OUTPUT_NAME", default="out.mp4", help="Desired name for the output file", required=False)
+    args.add_argument("-t", "--titles", type=str, metavar="TITLE_FILE", default="titles.txt", help="Name of the file containing titles for the video", required=False)
+    conf_help = "Name of the configuration file. If not given and no file named \"chop.conf\" exists in the current directory, default values will be used"
+    args.add_argument("-c", "--config", type=str, metavar="CONFIG_FILE", default="chop.conf", help=conf_help, required=False)
+    args.add_argument("-g", "--gen-config", action="store_true", help="Generate configuration file with default values and exit", required=False)
+    args.add_argument("-d", "--dry-run", action="store_true", help="Only scan and display the files to be cut but don't start chopping them")
     args = args.parse_args()
 
+    if args.gen_config:
+        make_default_config(args.config)
+        exit()
+    
     conf = read_config(args.config)
 
 
@@ -110,20 +117,35 @@ if __name__ == "__main__":
     if not args.input:
         input_dir = os.getcwd()
 
-    files = os.listdir(input_dir)
-    file_set = set(files)
 
     videofiles = []
     datafiles = []
     titles = []
+    for root, subdirs, files in os.walk(input_dir):
+        file_set = set(files)
+        for fname in files:
+            if fname.lower().endswith("mp4"):
+                cut_file = f"{fname.split('.')[0]}.txt"
+                if cut_file in file_set:
+                    videofiles.append(os.path.join(root, fname))
+                    datafiles.append(os.path.join(root, cut_file))
+            elif fname.lower() == args.titles:
+                titles.extend(get_lines(os.path.join(root, args.titles)))
+        if not args.recursive:
+            break
+    
+    print(bold("Chopping following files:"))
+    for v in videofiles:
+        print(v)
 
-    for fname in files:
-        if fname.lower().endswith("mp4"):
-            cut_file = f"{fname.split('.')[0]}.txt"
-            if cut_file in file_set:
-                videofiles.append(os.path.join(input_dir, fname))
-                datafiles.append(os.path.join(input_dir, cut_file))
-        elif fname.lower() == args.titles:
-            titles = get_lines(os.path.join(input_dir, args.titles))
+    print(bold("\nUsing following titles:"))
+    for t in titles:
+        print(t.strip())
+    
+    if args.dry_run:
+        print(bold(warn("\nStopping execution because of the dry-run argument")))
+        exit()
+
+    print(bold("\nStarting the chopping process:"))
 
     process_with_moviepy(videofiles, datafiles, args.output, titles, conf)

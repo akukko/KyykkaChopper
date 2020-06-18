@@ -24,19 +24,30 @@ class Configuration:
             conf_str += f"{key:<32}{val}\n"
         return conf_str
 
+def make_default_config(configfile):
+    lines = get_lines(configfile)
+    if lines:
+        print(warn("Requested creation of default configuration file, but configuration file already exists. Not overwriting."))
+        return
+
+    conf = Configuration()
+    with open(configfile, "w") as f:
+        f.write(str(conf))
+    print(ok(f"Created new configuration file with default values at: {header(configfile)}"))
+
 def read_config(configfile):
     # Create default configuration
     conf = Configuration()
 
     lines = get_lines(configfile)
+    
     if lines:
         return handle_config_values(conf, lines)
     else:
-        # Config was empty or didn't exist.
-        print(warn("No configuration found, creating one with default values."))
-        with open(configfile, "w") as f:
-            f.write(str(conf))
-        return conf
+        # Config was empty or didn't exist
+        print(bold(header("Configuration file didn't exist or was empty. Using default values.\n")))
+
+    return conf
 
 def handle_config_values(conf, lines):
     for l in lines:
