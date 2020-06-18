@@ -1,6 +1,7 @@
 from config import *
 from terminal_colors import *
 from helpers import get_lines
+from files import *
 
 import argparse
 import os
@@ -15,8 +16,6 @@ def parse_cuts(vid, filename, texts, conf):
     <clip end (in seconds)
     """
     cuts = []
-
-
 
     with open(filename, "r") as f:
         lines = [l for l in (line.strip() for line in f) if l] 
@@ -112,39 +111,13 @@ if __name__ == "__main__":
     
     conf = read_config(args.config)
 
-
     input_dir = args.input
     if not args.input:
+        # If no input dir is given, use the working directory (where this script is ran)
         input_dir = os.getcwd()
 
+    videofiles, datafiles, titles = get_files(input_dir, args.titles, args.recursive)
 
-    videofiles = []
-    datafiles = []
-    titles = []
-    for root, subdirs, files in os.walk(input_dir):
-        file_set = set(files)
-        new_titles = []
-        found_valid_videos = False
-        for fname in files:
-            if fname.lower().endswith("mp4"):
-                cut_file = f"{fname.split('.')[0]}.txt"
-                if cut_file in file_set:
-                    if new_titles:
-                        titles.extend(new_titles)
-                    videofiles.append(os.path.join(root, fname))
-                    datafiles.append(os.path.join(root, cut_file))
-                    found_valid_videos = True
-
-            elif fname.lower() == args.titles:
-                t = get_lines(os.path.join(root, args.titles))
-                if found_valid_videos:
-                    titles.extend(t)
-                else:
-                    new_titles.extend(t)
-
-        if not args.recursive:
-            break
-    
     print(bold("Chopping following files:"))
     for v in videofiles:
         print(v)
