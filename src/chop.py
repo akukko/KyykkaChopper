@@ -1,6 +1,5 @@
 from config import *
 from terminal_colors import *
-from helpers import get_lines
 from files import *
 
 import argparse
@@ -116,7 +115,7 @@ if __name__ == "__main__":
         # If no input dir is given, use the working directory (where this script is ran)
         input_dir = os.getcwd()
 
-    videofiles, datafiles, titles = get_files(input_dir, args.titles, args.recursive)
+    videofiles, datafiles, titles = get_project_files(input_dir, args.titles, args.recursive)
 
     print(bold("Chopping following files:"))
     for v in videofiles:

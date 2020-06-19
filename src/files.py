@@ -1,11 +1,23 @@
-from helpers import *
 from terminal_colors import *
 
 import glob
 import os
 
+def get_lines(titlefile, ignore_comments=True):
+    try:
+        with open(titlefile, "r", encoding='utf-8') as f:
+            lines = f.readlines()
+        if ignore_comments:
+            without_comments = []
+            for line in lines:
+                if not line.strip().startswith("#"):
+                    without_comments.append(line)
+            return without_comments
+        return lines
+    except:
+        return []
 
-def get_files(input_dir, titlefile, recursive):
+def get_project_files(input_dir, titlefile, recursive):
     videofiles = []
     datafiles = []
     titles = []

@@ -1,6 +1,5 @@
 from terminal_colors import *
-from helpers import get_lines
-
+from files import get_lines
 
 TITLE_FONT_KEY = "titlefont"
 TITLE_SIZE_KEY = "titlesize"
