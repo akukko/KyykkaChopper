@@ -31,14 +31,20 @@ def parse_cuts(vid, filename, texts, conf):
                 if title_start:
                     # title at the very beginning
                     clip, text_i = build_title(vid, title_start, start, texts, text_i, conf)
-
                     cuts.append(clip)
                     title_start = None
                 end = None
                 title = None
             elif line.startswith("<"):
-                end = float(line[1:].strip())
-                clip = vid.subclip(start, end)
+
+                if line.startswith("<vol"):
+                    end = float(line[4:].strip())
+                    clip = vid.subclip(start, end).volumex(conf.volfactor)
+                else:
+                    end = float(line[1:].strip())
+                    clip = vid.subclip(start, end)
+
+
                 cuts.append(clip)
                 title = None
             elif line.startswith("*"):

@@ -4,6 +4,7 @@ from files import get_lines
 TITLE_FONT_KEY = "titlefont"
 TITLE_SIZE_KEY = "titlesize"
 TITLE_COLOR_KEY = "titlecolor"
+VOL_FACTOR_KEY = "volfactor"
 
 
 class Configuration:
@@ -11,11 +12,13 @@ class Configuration:
         self.titlefont = "roboto-mono"
         self.titlesize = 110
         self.titlecolor = "white"
+        self.volfactor = 0.1
     
     def __str__(self):
         key_vals = { TITLE_FONT_KEY: self.titlefont
                    , TITLE_SIZE_KEY: self.titlesize
                    , TITLE_COLOR_KEY: self.titlecolor
+                   , VOL_FACTOR_KEY: self.volfactor
                    }
 
         conf_str = ""
@@ -65,6 +68,8 @@ def handle_config_values(conf, lines):
             conf.titlecolor = value
         elif key == TITLE_SIZE_KEY:
             conf.titlesize = int(value)
+        elif key == TITLE_SIZE_KEY:
+            conf.volfactor = float(value)
         else:
             print(warn(f"\nConfiguration key not recognized, ignoring it: {header(bold(key))} \n"))
     print(ok("\nConfiguration read succesfully.\n"))

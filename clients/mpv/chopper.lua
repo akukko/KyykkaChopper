@@ -44,7 +44,7 @@ function platform_independent(filepath)
   return filepath -- // see "shared-bookmarks-different-os.md" to see utility of this function
 end
 
-function saveKyykka(time_sec, path, char)
+function saveKyykka(time_sec, path, char1, char2)
   msg.info(path)
   
   -- Open the file in r mode (don't modify file, just read)
@@ -67,15 +67,14 @@ function saveKyykka(time_sec, path, char)
   -- Close the file so that we can open it in a different mode
   f:close()
 
-  if char ~= nil then
-    table.insert(lines, string.format("%s %.10f", char, time_sec))
+  if char2 == nil then
+    table.insert(lines, string.format("%s" .. string.rep(' ', 8 - #char1) .. "%.10f", char1, time_sec))
     mp.osd_message(string.format("Saved char: %s", char))
   elseif (#lines - titles) % 2 == 0 then
-    table.insert(lines, string.format("> %.10f", time_sec))
+    table.insert(lines, string.format("%s" .. string.rep(' ', 8 - #char1) .. "%.10f", char1, time_sec))
     mp.osd_message("Cut number 1")
-
   else
-    table.insert(lines, string.format("< %.10f", time_sec))
+    table.insert(lines, string.format("%s" .. string.rep(' ', 8 - #char2) .. "%.10f", char2, time_sec))
     mp.osd_message("Cut number 2")
   end
 
@@ -105,19 +104,25 @@ end
 
 function cut_save()
   msg.info("[interface]", "received cut script message.")
-  saveKyykka(mp.get_property("time-pos"), get_cutfile_path(), nil)
+  saveKyykka(mp.get_property("time-pos"), get_cutfile_path(), ">", "<")
 end
 mp.register_script_message("cut", cut_save)
 
 function title_save()
   msg.info("received title script message.")
-  saveKyykka(mp.get_property("time-pos"), get_cutfile_path(), "*")
+  saveKyykka(mp.get_property("time-pos"), get_cutfile_path(), "*", nil)
 end
 mp.register_script_message("title", title_save)
 
+function volume_cut_save()
+  msg.info("received volume cut script message.")
+  saveKyykka(mp.get_property("time-pos"), get_cutfile_path(), ">", "<vol")
+end
+mp.register_script_message("volume_cut", volume_cut_save)
+
 function extra_save()
   msg.info("received extra script message.")
-  saveKyykka(mp.get_property("time-pos"), get_cutfile_path(), "|")
+  saveKyykka(mp.get_property("time-pos"), get_cutfile_path(), "|", nil)
 end
 mp.register_script_message("extra", extra_save)
 
