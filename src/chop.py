@@ -87,10 +87,13 @@ def process_with_moviepy(filenames, datafiles, outfile, titles, conf):
 
         for cut in cuts:
             clips.append(cut)
+    
+    if clips:
+        final_clip = concatenate_videoclips(clips)
+        final_clip.write_videofile(outfile)
+    else:
+        print(warn("\nNo clips to process. Exiting."))
 
-    final_clip = concatenate_videoclips(clips)
-
-    final_clip.write_videofile(outfile)
 
 if __name__ == "__main__":
     args = argparse.ArgumentParser()
