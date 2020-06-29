@@ -5,21 +5,33 @@ import os
 
 set_timestamp_start = 'x'
 set_timestamp_end = 'c'
+set_text = 't'
 pause_player = 'space'
 go_forward = 'right'
 go_backward = 'left'
 time_step = 5000 #ms
 
-def get_time_frame_start(timestamp, player):
-    time = player.get_time()/1000
-    # print(time)
-    timestamp["start"] = time
+def get_time_frame_start(player, timestamps, turn):
+    if turn[0]:
+        time = player.get_time()/1000
+        timestamps.append(">" + str(time))
+        turn[0] = False
 
-def get_time_frame_end(timestamp, timestamps, player):
+def get_time_frame_end(player, timestamps, turn):
+    if not turn[0]:
+        time = player.get_time()/1000
+        timestamps.append("<" + str(time))
+        turn[0] = True
+
+def get_text_time(player, timestamps, texts):
     time = player.get_time()/1000
-    # print(time)
-    timestamp["end"] = time
-    timestamps.append(timestamp.copy())
+    timestamps.append("*" + str(time))
+    if str(player.get_state()) == "State.Playing":
+        player.pause()
+    cls()
+    text = input("Syötä teksti. Jos kyseessä on alkuteksti, erota tapahtuma ja pelaaja teksti ; merkillä : ")
+    texts.append(text)
+    player.play()
 
 def pause(player):
     player.pause()
@@ -33,25 +45,36 @@ def move_backward(player, time_step):
         player.set_time(player.get_time() - time_step)
 
 def edit_video(file):
+    turn = [True]
     timestamps = []
-    timestamp = {"start" : 0, "end": 0}
+    texts = []
     player = vlc.MediaPlayer(file)
     player.play()
-    keyboard.add_hotkey(set_timestamp_start, get_time_frame_start, args=[timestamp, player])
-    keyboard.add_hotkey(set_timestamp_end, get_time_frame_end, args=[timestamp, timestamps, player])
+    keyboard.add_hotkey(set_timestamp_start, get_time_frame_start, args=[player, timestamps, turn])
+    keyboard.add_hotkey(set_timestamp_end, get_time_frame_end, args=[player, timestamps, turn])
+    keyboard.add_hotkey(set_text, get_text_time, args=[player, timestamps, texts])
     keyboard.add_hotkey(pause_player, pause, args=[player])
     keyboard.add_hotkey(go_forward, move_forward, args=[player, time_step])
     keyboard.add_hotkey(go_backward, move_backward, args=[player, time_step])
     # keyboard.add_hotkey('esc', cut_video, args=[timestamps, file])
-    print("Hätä tilanteessa paina ESC.")
+    print("Lopettaaksesi paina ESC.")
     keyboard.wait('esc')
-    write_file(timestamps, file)
-    # print(timestamps)
+    write_file(timestamps, file.split(".")[0])
+    write_file(texts, file.split("\\")[0] + "\\titles")
 
 def write_file(timestamps, file):
-    with open(file + "_timestamps.txt", "w") as f:
-        for i in timestamps:
-            f.write(">clip start " + str(i["start"]) + "\n" + "<clip end " + str(i["end"]) + "\n")
+    with open(file + ".txt", "w") as f:
+        for line in timestamps:
+            f.write("%s\n" % line)
+
+def cls():
+    try:
+        import msvcrt
+        while msvcrt.kbhit():
+            msvcrt.getch()
+    except ImportError:
+        import sys, termios    #for linux/unix
+        termios.tcflush(sys.stdin, termios.TCIOFLUSH)
 
 
 if __name__ == "__main__":

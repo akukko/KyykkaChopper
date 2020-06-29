@@ -4,7 +4,10 @@ from files import *
 
 import argparse
 import os
-from moviepy.editor import VideoFileClip, concatenate_videoclips, TextClip, CompositeVideoClip
+from moviepy.editor import VideoFileClip, concatenate_videoclips, TextClip, CompositeVideoClip, ImageClip
+from math import tanh
+import numpy as np
+import cv2
 
 text_i = 0
 
@@ -17,7 +20,7 @@ def parse_cuts(vid, filename, texts, conf):
     cuts = []
 
     with open(filename, "r") as f:
-        lines = [l for l in (line.strip() for line in f) if l] 
+        lines = [l for l in (line.strip() for line in f) if l]
 
         start = None
         end = None
@@ -30,7 +33,8 @@ def parse_cuts(vid, filename, texts, conf):
                 start = float(line[1:].strip())
                 if title_start:
                     # title at the very beginning
-                    clip, text_i = build_title(vid, title_start, start, texts, text_i, conf)
+                    # clip, text_i = build_title(vid, title_start, start, texts, text_i, conf)
+                    clip, text_i = build_start_title(vid, start, texts, text_i)
                     cuts.append(clip)
                     title_start = None
                 end = None
@@ -63,22 +67,22 @@ def parse_cuts(vid, filename, texts, conf):
                     continue
 
                 title = float(line[1:].strip())
-                
+
                 clip, text_i = build_title(vid, title_start, title, texts, text_i, conf)
                 cuts.append(clip)
 
                 title_start = None
     return cuts
-            
+
 
 def build_title(vid, title_start, title_end, texts, text_i, conf):
     t = texts[text_i]
     t = t.replace('\\n', '\n')
-    
+
     clip = vid.subclip(title_start, title_end)
 
     text = TextClip(f"{t}", fontsize=conf.titlesize, font=conf.titlefont, color=conf.titlecolor).set_pos(("center", "bottom"))
-    
+
     comp_clip = CompositeVideoClip([clip, text])
     comp_clip.duration = clip.duration
 
@@ -93,12 +97,81 @@ def process_with_moviepy(filenames, datafiles, outfile, titles, conf):
 
         for cut in cuts:
             clips.append(cut)
-    
+
     if clips:
         final_clip = concatenate_videoclips(clips)
         final_clip.write_videofile(outfile)
     else:
         print(warn("\nNo clips to process. Exiting."))
+
+def build_start_title(vid, title_end, texts, text_i):
+
+    dirname = os.path.dirname(__file__) # Relative path to the folder
+    # Images
+    maila = "Karttu.png"
+    logo = "logo.png"
+    # Fonts
+    font = "Ebrima-Bold"
+    # font = "Fixedsys Regular"
+    fontsize = 150
+    color = "#e94b3cff"
+    stroke_color = "#1d1b1b"
+
+    if float(title_end) - 4.0 > 0.0:
+        clip = vid.subclip(float(title_end) - 4.0, title_end)
+    else: # if start is shorter than 4 s
+        rate = title_end / 4
+        clip = vid.subclip(0, title_end).speedx(rate)
+    t = texts[text_i]
+    t = t.replace('\\n', '\n')
+    t = t.split(";")    # separate event and players
+    if len(t) == 2:
+        players = t[0]
+        event = t[1]
+    else:
+        event = t[0]
+        players = ""
+
+    maila_img = ImageClip(os.path.join(dirname ,maila), duration = 4)\
+                .resize(height = int(clip.size[1] * 0.7))
+    logo_img = ImageClip(os.path.join(dirname ,logo), duration = 4)\
+                .resize(width = maila_img.size[0] + 100)\
+                .set_position(("center", "top"))
+    maila_img = maila_img.margin(top = logo_img.size[1],\
+                                 left = int((logo_img.size[0] - maila_img.size[0]) / 2),\
+                                 right = int((logo_img.size[0] - maila_img.size[0]) / 2),\
+                                 opacity = 0)
+    images = CompositeVideoClip([maila_img,logo_img])
+    images_rot = images.set_position("center")\
+                .resize(lambda t: min(0.2 + t*1.5 , 1))\
+                .rotate(lambda t: 500 * (tanh(t*4 + 0.5) * -5 + 5), resample = "nearest")
+    event_txt = TextClip(event,
+                         stroke_color = stroke_color,\
+                         stroke_width = 4, color=color,\
+                         font= font,\
+                         kerning = 5,\
+                         fontsize=fontsize)\
+                .set_duration(4)
+    event_txt = event_txt.resize(width = clip.size[0] / 2 - 300)
+    event_txt = event_txt.set_pos(lambda t:(min(clip.size[0]/2 + 100,-800 + t * 1500),clip.size[1]/2))
+    player_txt = TextClip(players,\
+                          stroke_color = stroke_color,\
+                          stroke_width = 4, color=color,\
+                          font=font,\
+                          kerning = 5,\
+                          fontsize=fontsize)\
+                .set_duration(4)
+    player_txt = player_txt.set_pos(lambda t:(max(clip.size[0]/2 - player_txt.size[0]- 100, clip.size[0] + 600 + t * -1800),clip.size[1]/2 - player_txt.size[1]/2))
+    mask_left = np.zeros((clip.size[1],clip.size[0], 4))
+    mask_right = B = np.copy(mask_left)
+    mask_left = cv2.rectangle(mask_left, (0, 0), (int(clip.size[0]/2), clip.size[1]), (255,255,255,255), -1)
+    mask_right = cv2.rectangle(mask_right, (int(clip.size[0]/2), 0), (clip.size[0], clip.size[1]),  (255,255,255,255), -1)
+    mask_left = ImageClip(mask_left, duration=2, ismask=True)
+    mask_right = ImageClip(mask_right, duration=2, ismask=True)
+    # cv2.imwrite("kala.png",mask_right)
+    comp_clip = CompositeVideoClip([clip, event_txt, clip.set_mask(mask_left)])
+    comp_clip = CompositeVideoClip([comp_clip, player_txt, comp_clip.set_mask(mask_right), images_rot])
+    return comp_clip, text_i + 1
 
 
 if __name__ == "__main__":
@@ -116,7 +189,7 @@ if __name__ == "__main__":
     if args.gen_config:
         make_default_config(args.config)
         exit()
-    
+
     conf = read_config(args.config)
 
     input_dir = args.input
@@ -133,7 +206,7 @@ if __name__ == "__main__":
     print(bold("\nUsing following titles:"))
     for t in titles:
         print(t.strip())
-    
+
     if args.dry_run:
         print(bold(warn("\nStopping execution because of the dry-run argument")))
         exit()
