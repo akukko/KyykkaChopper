@@ -36,7 +36,7 @@ def get_project_files(input_dir, titlefile, recursive):
         new_titles = []
         found_valid_videos = False
         for fname in files:
-            if fname.lower().endswith("mp4"):
+            if fname.lower().endswith(("mp4", "avi", "mts")):
                 cut_file = f"{fname.split('.')[0]}.txt"
                 if cut_file in file_set and os.path.join(root, fname) not in ignored_files:
                     if new_titles:
@@ -72,7 +72,7 @@ def get_ignored_files(input_dir, recursive):
                         add_ignore(os.path.join(ignored, f))
             elif os.path.isfile(ignored):
                 ignored_files.add(ignored)
-        
+
         for match in glob.glob(stripped, recursive=True):
             add_ignore(match)
     return ignored_files
