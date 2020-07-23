@@ -18,7 +18,6 @@ def parse_cuts(vid, filename, texts, conf):
     <clip end (in seconds)
     """
     cuts = []
-
     with open(filename, "r") as f:
         lines = [l for l in (line.strip() for line in f) if l]
 
@@ -94,10 +93,8 @@ def process_with_moviepy(filenames, datafiles, outfile, titles, conf):
     for video_file, data_file in zip(filenames, datafiles):
         input_vid = VideoFileClip(video_file)
         cuts = parse_cuts(input_vid, data_file, titles, conf)
-
         for cut in cuts:
             clips.append(cut)
-
     if clips:
         final_clip = concatenate_videoclips(clips)
         final_clip.write_videofile(outfile)
@@ -105,7 +102,6 @@ def process_with_moviepy(filenames, datafiles, outfile, titles, conf):
         print(warn("\nNo clips to process. Exiting."))
 
 def build_start_title(vid, title_end, texts, text_i):
-
     dirname = os.path.dirname(__file__) # Relative path to the folder
     # Images
     maila = "Karttu.png"
@@ -124,7 +120,7 @@ def build_start_title(vid, title_end, texts, text_i):
         clip = vid.subclip(0, title_end).speedx(rate)
     t = texts[text_i]
     t = t.replace('\\n', '\n')
-    t = t.split(";")    # separate event and players
+    t = t.split(";")    # separate players and event. Example: player1 vs. player2; Event 2020
     if len(t) == 2:
         players = t[0]
         event = t[1]

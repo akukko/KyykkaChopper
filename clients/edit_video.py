@@ -2,7 +2,7 @@ import vlc
 import keyboard
 import argparse
 import os
-
+#lisää tarkistus että seuraava leikkausaika on isompi kun edellinen
 set_timestamp_start = 'x'
 set_timestamp_end = 'c'
 remove_last_input_timestamp = 'z'

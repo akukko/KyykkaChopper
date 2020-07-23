@@ -45,8 +45,8 @@ def get_project_files(input_dir, titlefile, recursive):
                     datafiles.append(os.path.join(root, cut_file))
                     found_valid_videos = True
 
-            elif fname.lower() == titlefile:
-                t = get_lines(os.path.join(root, titlefile))
+            elif fname.lower().endswith(titlefile):
+                t = get_lines(os.path.join(root, fname))
                 if found_valid_videos:
                     titles.extend(t)
                 else:
